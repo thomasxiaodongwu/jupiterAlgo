@@ -7,7 +7,7 @@ import bs58 from 'bs58';
 const MONGO_URI = 'mongodb://localhost:27017';
 const DB_NAME = 'dexscreener';
 const COLLECTION_NAME = 'tokens';
-const connection = new Connection("https://mainnet.helius-rpc.com/?api-key=98347d3d-111e-437f-97b2-0d0acc953b2d");
+const connection = new Connection("https://mainnet.helius-rpc.com/?api-key="+process.env.API_KEY);
 const wallet = new Wallet(Keypair.fromSecretKey(bs58.decode(process.env.PRIVATE_KEY || '')));
 
 const client = new MongoClient(MONGO_URI);
@@ -27,7 +27,7 @@ async function getWalletBalance() {
 
 async function processToken(token: any): Promise<void> {
     return new Promise(async (resolve, reject) => {
-        let initAmount = 100000000;
+        let initAmount = 100000000; //0.1 SOL
         while (true) {
             const baseAmount = await getWalletBalance();
             if(baseAmount <= initAmount){
@@ -51,6 +51,7 @@ async function processToken(token: any): Promise<void> {
                 );
                 break;
             }else{
+                console.log('get into compute ledger.');
                 const { swapTransactionFirst } = await (
                     await fetch('https://quote-api.jup.ag/v6/swap', {
                         method: 'POST',
@@ -100,7 +101,7 @@ async function processToken(token: any): Promise<void> {
 
                 const serializedTransactions = transactions.map(tx => tx.serialize());
                 const combinedTransaction = Buffer.concat(serializedTransactions);
-
+                console.log('begin sendRawTransaction.' + token.tokenAddress);
                 const latestBlockHash = await connection.getLatestBlockhash();
                 const txid = await connection.sendRawTransaction(combinedTransaction, {
                     skipPreflight: true,
