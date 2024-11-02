@@ -1,5 +1,6 @@
 import {MongoClient} from 'mongodb';
-import {Connection, Keypair, VersionedTransaction} from '@solana/web3.js';
+import {Connection, Keypair, PublicKey, VersionedTransaction} from '@solana/web3.js';
+import { getAssociatedTokenAddress, getAccount } from '@solana/spl-token';
 import fetch from 'cross-fetch';
 import {Wallet} from '@project-serum/anchor';
 import bs58 from 'bs58';
@@ -24,6 +25,26 @@ client.connect();
 const db = client.db(DB_NAME);
 const collection = db.collection(COLLECTION_NAME);
 
+const WSOL_MINT_ADDRESS = new PublicKey('So11111111111111111111111111111111111111112');
+
+async function getWSOLBalance() {
+    try {
+        // 获取 WSOL 的关联账户地址
+        const associatedTokenAddress = await getAssociatedTokenAddress(
+            WSOL_MINT_ADDRESS,
+            wallet.publicKey
+        );
+        // 获取账户信息
+        const accountInfo = await getAccount(connection, associatedTokenAddress);
+        // 打印 WSOL 的余额
+        console.log('WSOL balance:', Number(accountInfo.amount) / 1e9, 'WSOL');
+        return Number(accountInfo.amount);
+    } catch (error) {
+        console.error('Error fetching WSOL balance:', error);
+        return 0;
+    }
+}
+
 async function getWalletBalance() {
     try {
         const balance = await connection.getBalance(wallet.publicKey);
@@ -39,7 +60,8 @@ async function processToken(token: any): Promise<void> {
         let initAmount = 1000000; //0.001 SOL
         while (true) {
             const baseAmount = await getWalletBalance();
-            if(baseAmount <= initAmount){
+            const baseWAmount = await getWSOLBalance();
+            if(baseAmount <= initAmount && baseWAmount <= initAmount){
                 console.log('Wallet balance is less than initamount');
                 break;
             }
