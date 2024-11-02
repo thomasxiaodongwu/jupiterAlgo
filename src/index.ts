@@ -74,7 +74,7 @@ async function processToken(token: any): Promise<void> {
             console.log({ quoteFirst });
             console.log({ quoteSecond });
 
-            if ((quoteSecond.outAmount - initAmount) / initAmount > 0.1) {
+            if ((quoteSecond.outAmount - initAmount) / initAmount < 0.1) {
                 console.log('A is greater than B, exiting loop.');
                 await collection.updateOne(
                     {tokenAddress: token.tokenAddress},
