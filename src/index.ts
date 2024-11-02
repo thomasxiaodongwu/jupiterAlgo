@@ -57,7 +57,7 @@ async function getWalletBalance() {
 
 async function processToken(token: any): Promise<void> {
     return new Promise(async (resolve, reject) => {
-        let initAmount = 10000000; //0.01 SOL
+        let initAmount = 50000000; //0.05 SOL
         while (true) {
             const baseAmount = await getWalletBalance();
             const baseWAmount = await getWSOLBalance();
