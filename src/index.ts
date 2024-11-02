@@ -14,6 +14,7 @@ dotenv.config({
 const MONGO_URI = 'mongodb://localhost:27017';
 const DB_NAME = 'dexscreener';
 const COLLECTION_NAME = 'tokens';
+console.log("..." + envPath)
 console.log("..." + process.env["PRIVATE_KEY"])
 const connection = new Connection("https://mainnet.helius-rpc.com/?api-key="+process.env["API_KEY"]);
 const wallet = new Wallet(Keypair.fromSecretKey(bs58.decode(process.env["PRIVATE_KEY"] || '')));
