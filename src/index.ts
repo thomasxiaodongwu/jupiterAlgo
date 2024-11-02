@@ -83,6 +83,10 @@ async function processToken(token: any): Promise<void> {
                 break;
             }else{
                 console.log('get into compute ledger.');
+                await collection.updateOne(
+                    {tokenAddress: token.tokenAddress},
+                    {$set: {runstatus: 1}}
+                );
                 const { swapTransactionFirst } = await (
                     await fetch('https://quote-api.jup.ag/v6/swap', {
                         method: 'POST',
@@ -161,10 +165,6 @@ async function queryDatabase() {
             for (const token of tokens) {
                 try {
                     console.log(`Processing token: ${token.tokenAddress}`);
-                    await collection.updateOne(
-                        {tokenAddress: token.tokenAddress},
-                        {$set: {runstatus: 1}}
-                    );
                     await processToken(token);
                 } catch (error) {
                     console.error(`Error processing token ${token.tokenAddress}:`, error);
