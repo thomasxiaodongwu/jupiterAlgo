@@ -57,7 +57,7 @@ async function getWalletBalance() {
 
 async function processToken(token: any): Promise<void> {
     return new Promise(async (resolve, reject) => {
-        let initAmount = 100000000; //0.1 SOL
+        let initAmount = 10000000; //0.01 SOL
         while (true) {
             const baseAmount = await getWalletBalance();
             const baseWAmount = await getWSOLBalance();
@@ -66,10 +66,10 @@ async function processToken(token: any): Promise<void> {
                 break;
             }
             const quoteFirst = await (
-                await fetch('https://quote-api.jup.ag/v6/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=5pQSTDfeUppb6tV415RWygL8n3ctyakBTV7QzBn5pump&amount='+initAmount+'&slippageBps=10')
+                await fetch('https://quote-api.jup.ag/v6/quote?inputMint=So11111111111111111111111111111111111111112&outputMint='+token.tokenAddress+'&amount='+initAmount+'&slippageBps=10')
             ).json();
             const quoteSecond = await (
-                await fetch('https://quote-api.jup.ag/v6/quote?inputMint=5pQSTDfeUppb6tV415RWygL8n3ctyakBTV7QzBn5pump&outputMint=So11111111111111111111111111111111111111112&amount=' + quoteFirst.outAmount + '&slippageBps=10')
+                await fetch('https://quote-api.jup.ag/v6/quote?inputMint='+token.tokenAddress+'&outputMint=So11111111111111111111111111111111111111112&amount=' + quoteFirst.outAmount + '&slippageBps=10')
             ).json();
             console.log({ quoteFirst });
             console.log({ quoteSecond });
