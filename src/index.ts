@@ -3,10 +3,18 @@ import {Connection, Keypair, VersionedTransaction} from '@solana/web3.js';
 import fetch from 'cross-fetch';
 import {Wallet} from '@project-serum/anchor';
 import bs58 from 'bs58';
+import path from "path";
+import dotenv from "dotenv";
+
+const envPath = path.join(__dirname, ".env");
+dotenv.config({
+    path: envPath,
+});
 
 const MONGO_URI = 'mongodb://localhost:27017';
 const DB_NAME = 'dexscreener';
 const COLLECTION_NAME = 'tokens';
+console.log("..." + process.env.PRIVATE_KEY)
 const connection = new Connection("https://mainnet.helius-rpc.com/?api-key="+process.env.API_KEY);
 const wallet = new Wallet(Keypair.fromSecretKey(bs58.decode(process.env.PRIVATE_KEY || '')));
 
