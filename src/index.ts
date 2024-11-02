@@ -27,7 +27,7 @@ async function getWalletBalance() {
 
 async function processToken(token: any): Promise<void> {
     return new Promise(async (resolve, reject) => {
-        let initAmount = 100000000; //0.1 SOL
+        let initAmount = 1000000; //0.001 SOL
         while (true) {
             const baseAmount = await getWalletBalance();
             if(baseAmount <= initAmount){
@@ -43,7 +43,7 @@ async function processToken(token: any): Promise<void> {
             console.log({ quoteFirst });
             console.log({ quoteSecond });
 
-            if (quoteSecond.outAmount <= initAmount) {
+            if ((quoteSecond.outAmount - initAmount) / initAmount > 0.1) {
                 console.log('A is greater than B, exiting loop.');
                 await collection.updateOne(
                     {tokenAddress: token.tokenAddress},
