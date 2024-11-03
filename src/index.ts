@@ -59,7 +59,7 @@ async function getWalletBalance() {
 
 async function processToken(token: any): Promise<void> {
     return new Promise(async (resolve, reject) => {
-        let initAmount = 100000000; //0.1 SOL
+        let initAmount = 10000000; //0.01 SOL
         while (true) {
             const baseAmount = await getWalletBalance();
             const baseWAmount = await getWSOLBalance();
@@ -98,6 +98,9 @@ async function processToken(token: any): Promise<void> {
                     {tokenAddress: token.tokenAddress},
                     {$set: {runstatus: 1}}
                 );
+                const quoteFirstSwap = await (
+                    await fetch('https://quote-api.jup.ag/v6/quote?inputMint=So11111111111111111111111111111111111111112&outputMint='+token.tokenAddress+'&amount='+initAmount+'&slippageBps=10')
+                ).json();
                 const { swapTransactionFirst } = await (
                     await fetch('https://quote-api.jup.ag/v6/swap', {
                         method: 'POST',
@@ -106,7 +109,7 @@ async function processToken(token: any): Promise<void> {
                         },
                         body: JSON.stringify({
                             // quoteResponse from /quote api
-                            quoteFirst,
+                            quoteFirstSwap,
                             // user public key to be used for the swap
                             userPublicKey: wallet.publicKey.toString(),
                             // auto wrap and unwrap SOL. default is true
@@ -117,6 +120,30 @@ async function processToken(token: any): Promise<void> {
                     })
                 ).json();
                 console.log('......'+swapTransactionFirst);
+                // deserialize the transaction
+                let swapTransactionBuf = Buffer.from(swapTransactionFirst, 'base64');
+                var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+                console.log(transaction);
+                // sign the transaction
+                transaction.sign([wallet.payer]);
+                // get the latest block hash
+                const latestBlockHash = await connection.getLatestBlockhash();
+                // Execute the transaction
+                const rawTransaction = transaction.serialize()
+                const txid = await connection.sendRawTransaction(rawTransaction, {
+                    skipPreflight: true,
+                    maxRetries: 2
+                });
+                await connection.confirmTransaction({
+                    blockhash: latestBlockHash.blockhash,
+                    lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+                    signature: txid
+                });
+                console.log(`https://solscan.io/tx/${txid}`);
+
+                const quoteSecondSwap = await (
+                    await fetch('https://quote-api.jup.ag/v6/quote?inputMint='+token.tokenAddress+'&outputMint=So11111111111111111111111111111111111111112&amount=' + quoteFirstSwap.outAmount + '&slippageBps=10')
+                ).json();
                 const { swapTransactionSecond } = await (
                     await fetch('https://quote-api.jup.ag/v6/swap', {
                         method: 'POST',
@@ -125,7 +152,7 @@ async function processToken(token: any): Promise<void> {
                         },
                         body: JSON.stringify({
                             // quoteResponse from /quote api
-                            quoteSecond,
+                            quoteSecondSwap,
                             // user public key to be used for the swap
                             userPublicKey: wallet.publicKey.toString(),
                             // auto wrap and unwrap SOL. default is true
@@ -136,31 +163,26 @@ async function processToken(token: any): Promise<void> {
                     })
                 ).json();
                 console.log('......'+swapTransactionSecond);
-                const transactions: VersionedTransaction[] = [];
-                const swapTransactionBufFirst = Buffer.from(swapTransactionFirst, 'base64');
-                var transactionFirst = VersionedTransaction.deserialize(swapTransactionBufFirst);
-                transactionFirst.sign([wallet.payer]);
-                transactions.push(transactionFirst);
-
-                const swapTransactionBufSecond = Buffer.from(swapTransactionSecond, 'base64');
-                var transactionSecond = VersionedTransaction.deserialize(swapTransactionBufSecond);
-                transactionSecond.sign([wallet.payer]);
-                transactions.push(transactionSecond);
-
-                const serializedTransactions = transactions.map(tx => tx.serialize());
-                const combinedTransaction = Buffer.concat(serializedTransactions);
-                console.log('begin sendRawTransaction.' + token.tokenAddress);
-                const latestBlockHash = await connection.getLatestBlockhash();
-                const txid = await connection.sendRawTransaction(combinedTransaction, {
+                // deserialize the transaction
+                swapTransactionBuf = Buffer.from(swapTransactionSecond, 'base64');
+                transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+                console.log(transaction);
+                // sign the transaction
+                transaction.sign([wallet.payer]);
+                // get the latest block hash
+                const latestBlockHashT = await connection.getLatestBlockhash();
+                // Execute the transaction
+                const rawTransactionT = transaction.serialize()
+                const txidT = await connection.sendRawTransaction(rawTransactionT, {
                     skipPreflight: true,
                     maxRetries: 2
                 });
                 await connection.confirmTransaction({
-                    blockhash: latestBlockHash.blockhash,
-                    lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-                    signature: txid
+                    blockhash: latestBlockHashT.blockhash,
+                    lastValidBlockHeight: latestBlockHashT.lastValidBlockHeight,
+                    signature: txidT
                 });
-                console.log(`https://solscan.io/tx/${txid}`);
+                console.log(`https://solscan.io/tx/${txidT}`);
             }
             else{
                 console.log('later.');
