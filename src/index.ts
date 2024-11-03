@@ -116,6 +116,7 @@ async function processToken(token: any): Promise<void> {
                         })
                     })
                 ).json();
+                console.log('......'+swapTransactionFirst);
                 const { swapTransactionSecond } = await (
                     await fetch('https://quote-api.jup.ag/v6/swap', {
                         method: 'POST',
@@ -134,6 +135,7 @@ async function processToken(token: any): Promise<void> {
                         })
                     })
                 ).json();
+                console.log('......'+swapTransactionSecond);
                 const transactions: VersionedTransaction[] = [];
                 const swapTransactionBufFirst = Buffer.from(swapTransactionFirst, 'base64');
                 var transactionFirst = VersionedTransaction.deserialize(swapTransactionBufFirst);
