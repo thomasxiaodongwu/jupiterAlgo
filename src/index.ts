@@ -55,6 +55,8 @@ async function getWalletBalance() {
     }
 }
 
+// 0:初始化，1:正在运行，2：暂时无盈利，可计入笛卡尔积运算，3：api报错，放弃运算，4：损失巨大放弃运算
+
 async function processToken(token: any): Promise<void> {
     return new Promise(async (resolve, reject) => {
         let initAmount = 100000000; //0.1 SOL
@@ -76,19 +78,21 @@ async function processToken(token: any): Promise<void> {
             if(quoteFirst.error || quoteSecond.error){
                 await collection.updateOne(
                     {tokenAddress: token.tokenAddress},
-                    {$set: {runstatus: 2}}
+                    {$set: {runstatus: 3}}
                 );
                 break;
             }
+            const resultAmount = (quoteSecond.outAmount - initAmount) / initAmount
 
-            if ((quoteSecond.outAmount - initAmount) / initAmount < 0.1) {
-                console.log('A is greater than B, exiting loop.');
+            if (resultAmount <= -0.05) {
+                console.log('too huge.');
                 await collection.updateOne(
                     {tokenAddress: token.tokenAddress},
-                    {$set: {runstatus: 2}}
+                    {$set: {runstatus: 4}}
                 );
                 break;
-            }else{
+            }
+            else if(resultAmount >= 0.01){
                 console.log('get into compute ledger.');
                 await collection.updateOne(
                     {tokenAddress: token.tokenAddress},
@@ -156,6 +160,14 @@ async function processToken(token: any): Promise<void> {
                 });
                 console.log(`https://solscan.io/tx/${txid}`);
             }
+            else{
+                console.log('later.');
+                await collection.updateOne(
+                    {tokenAddress: token.tokenAddress},
+                    {$set: {runstatus: 3}}
+                );
+                break;
+            }
         }
 
         resolve();
@@ -177,7 +189,7 @@ async function queryDatabase() {
                     console.error(`Error processing token ${token.tokenAddress}:`, error);
                     await collection.updateOne(
                         {tokenAddress: token.tokenAddress},
-                        {$set: {runstatus: 3}}
+                        {$set: {runstatus: 1000}}
                     );
                 }
             }
