@@ -73,8 +73,8 @@ async function processToken(token: any): Promise<void> {
             const quoteSecond = await (
                 await fetch('https://quote-api.jup.ag/v6/quote?inputMint='+token.tokenAddress+'&outputMint=So11111111111111111111111111111111111111112&amount=' + quoteFirst.outAmount + '&slippageBps=10')
             ).json();
-            console.log({ quoteFirst });
-            console.log({ quoteSecond });
+            console.log(quoteFirst);
+            console.log(quoteSecond);
             if(quoteFirst.error || quoteSecond.error){
                 await collection.updateOne(
                     {tokenAddress: token.tokenAddress},
@@ -180,8 +180,8 @@ async function queryDatabase() {
     try {
         const tokens = await collection.find({ runstatus: 0 }).toArray();
         if (tokens.length === 0) {
-            console.log('No tokens found. Waiting 10 minutes...');
-            await new Promise(resolve => setTimeout(resolve, 600000));
+            console.log('No tokens found. Waiting 1 minutes...');
+            await new Promise(resolve => setTimeout(resolve, 100000));
         } else {
             for (const token of tokens) {
                 try {
