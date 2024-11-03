@@ -164,7 +164,7 @@ async function processToken(token: any): Promise<void> {
                 console.log('later.');
                 await collection.updateOne(
                     {tokenAddress: token.tokenAddress},
-                    {$set: {runstatus: 3}}
+                    {$set: {runstatus: 2}}
                 );
                 break;
             }
